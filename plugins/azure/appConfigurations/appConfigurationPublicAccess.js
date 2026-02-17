@@ -36,8 +36,9 @@ module.exports = {
 
             for (let appConfiguration of appConfigurations.data) {
                 if (!appConfiguration.id) continue;
-
-                if (appConfiguration.publicNetworkAccess && appConfiguration.publicNetworkAccess.toLowerCase() === 'disabled') {
+                const hasPrivateEndpoint = appConfiguration.privateEndpointConnections 
+                                            && appConfiguration.privateEndpointConnections.length > 0;
+                if ((appConfiguration.publicNetworkAccess && appConfiguration.publicNetworkAccess.toLowerCase() === 'disabled') || hasPrivateEndpoint) {
                     helpers.addResult(results, 0, 'App Configuration has public network access disabled', location, appConfiguration.id);
                 } else {
                     helpers.addResult(results, 2, 'App Configuration does not have public network access disabled', location, appConfiguration.id);

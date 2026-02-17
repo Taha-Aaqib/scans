@@ -48,6 +48,40 @@ const appConfigurations = [
               }
             }
         }
+    },
+    {
+        "type": "Microsoft.AppConfiguration/configurationStores",
+        "location": "eastus",
+        "provisioningState": "Succeeded",
+        "creationDate": "2023-12-27T09:26:54+00:00",
+        "endpoint": "https://dummy-test-rg.azconfig.io",
+        "encryption": {
+        "keyVaultProperties": null
+        },
+        "privateEndpointConnections": [
+            {
+                "id": "/subscriptions/123/resourceGroups/dummy-rg/providers/Microsoft.AppConfiguration/configurationStores/dummy-test-rg/privateEndpointConnections/dummyConnection",
+                "name": "dummyConnection",
+                "type": "Microsoft.AppConfiguration/configurationStores/privateEndpointConnections",
+                "properties": {
+                    "provisioningState": "Succeeded",
+                    "privateEndpoint": {
+                        "id": "/subscriptions/123/resourceGroups/dummy-rg/providers/Microsoft.Network/privateEndpoints/dummyEndpoint"
+                    },
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved",
+                        "description": "Auto approved"
+                    }
+                }
+            }
+        ],
+        "publicNetworkAccess": "Enabled",
+        "disableLocalAuth": false,
+        "softDeleteRetentionInDays": 0,
+        "enablePurgeProtection": false,
+        "id": "/subscriptions/123/resourceGroups/dummy-rg/providers/Microsoft.AppConfiguration/configurationStores/dummy-test-rg-private",
+        "name": "dummy-test-rg-private",
+        "tags": {}
     }
 ];
 
@@ -106,6 +140,17 @@ describe('appConfigurationPublicAccess', function () {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);
                 expect(results[0].message).to.include('App Configuration does not have public network access disabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if App Configuration has private endpoint connections', function (done) {
+            const cache = createCache([appConfigurations[2]]);
+            appConfigurationPublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('App Configuration has public network access disabled');
                 expect(results[0].region).to.equal('eastus');
                 done();
             });

@@ -1,5 +1,6 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure');
+const cidrHelper = require('../../../helpers/azure/cidr');
 
 module.exports = {
     title: 'App Service Public Network Access Disabled',
@@ -50,14 +51,39 @@ module.exports = {
 
                 var config = webConfigs.data[0];
 
-                if (config.publicNetworkAccess && config.publicNetworkAccess.toLowerCase() === 'disabled') {
+                if (config.publicNetworkAccess &&
+                    config.publicNetworkAccess.toLowerCase() === 'disabled') {
+
                     helpers.addResult(results, 0,
                         'App Service has public network access disabled',
                         location, webApp.id);
-                } else {
-                    helpers.addResult(results, 2,
-                        'App Service does not have public network access disabled',
-                        location, webApp.id);
+                    return;
+                }
+                else {
+                    let hasOpenCidr = false;
+                    
+                    if (config.ipSecurityRestrictions && config.ipSecurityRestrictions.length) {
+                        for (let rule of config.ipSecurityRestrictions) {
+                            if (cidrHelper.isOpenCidrRange(rule.ipAddress)) {
+                                hasOpenCidr = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    const restricted =
+                        config.ipSecurityRestrictionsDefaultAction &&
+                        config.ipSecurityRestrictionsDefaultAction.toLowerCase() === 'deny' && !hasOpenCidr;
+                    
+                    if (restricted) {
+                        helpers.addResult(results, 0,
+                            'App Service has public network access disabled',
+                            location, webApp.id);
+                    } else {
+                        helpers.addResult(results, 2,
+                            'App Service does not have public network access disabled',
+                            location, webApp.id);
+                    }
                 }
             });
 

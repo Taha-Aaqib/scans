@@ -1,5 +1,6 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure/');
+var cidr = require('../../../helpers/azure/cidr');
 
 module.exports = {
     title: 'Storage Account Public Network Access',
@@ -17,16 +18,6 @@ module.exports = {
         var results = [];
         var source = {};
         var locations = helpers.locations(settings.govcloud);
-        
-        function isOpenCidrRange(cidr) {
-            if (!cidr || typeof cidr !== 'string') return false;
-            
-            const trimmed = cidr.trim();
-            // Check for exact matches that indicate fully open access
-            return trimmed === '0.0.0.0/0' || 
-                   trimmed === '::/0' || 
-                   trimmed === '0.0.0.0';
-        }
 
         async.each(locations.storageAccounts, function(location, rcb) {
             var storageAccount = helpers.addSource(cache, source,
@@ -57,7 +48,7 @@ module.exports = {
                     if (hasIpRules) {
 
                         for (let rule of account.networkAcls.ipRules) {
-                            if (isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
+                            if (cidr.isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
                                 hasOpenCidr = true;
                                 break;
                             }

@@ -19,9 +19,47 @@ const workspaces = [
         "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/workspaces/test1",
         "name": "test",
         "type": "Microsoft.MachineLearningServices/workspaces",
-        "publicNetworkAccess" : "Enabled"
+        "publicNetworkAccess" : "Enabled",
+        "networkAcls": {
+            "defaultAction": "Allow",
+            "ipRules": []
+        }
       },
-     
+      {
+        "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/workspaces/test1",
+        "name": "test",
+        "type": "Microsoft.MachineLearningServices/workspaces",
+        "publicNetworkAccess": "Enabled",
+        "privateEndpointConnections": [
+            {
+                "properties": {
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved"
+                    }
+                }
+            }
+        ]
+      },
+      {
+        "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/workspaces/test1",
+        "name": "test",
+        "type": "Microsoft.MachineLearningServices/workspaces",
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+            "defaultAction": "Deny",
+            "ipRules": [{"value": "123.2.21.1/32"}, {"value": "103.177.240.106/32"}]
+        }
+      },
+      {
+        "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/workspaces/test1",
+        "name": "test",
+        "type": "Microsoft.MachineLearningServices/workspaces",
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+            "defaultAction": "Deny",
+            "ipRules": [{"value": "0.0.0.0/0"}]
+        }
+      }
 ];
 
 const createCache = (workspaces) => {
@@ -84,6 +122,39 @@ describe('workspacePublicAccessDisabled', function() {
 
         it('should give failing result if Machine Learning workspace does not have  public access disabled', function(done) {
             const cache = createCache([workspaces[1]]);
+            workspacePublicAccessDisabled.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(2);
+                expect(results[0].message).to.include('Machine Learning workspace has public network access enabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if Machine Learning workspace has public access enabled but private endpoint is approved', function(done) {
+            const cache = createCache([workspaces[2]]);
+            workspacePublicAccessDisabled.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Machine Learning workspace has public network access disabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if Machine Learning workspace has selected networks with restricted IP ranges', function(done) {
+            const cache = createCache([workspaces[3]]);
+            workspacePublicAccessDisabled.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Machine Learning workspace has public network access disabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give failing result if Machine Learning workspace has selected networks but IP rules contain open CIDR', function(done) {
+            const cache = createCache([workspaces[4]]);
             workspacePublicAccessDisabled.run(cache, {}, (err, results) => {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);

@@ -1,5 +1,6 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure');
+const cidrHelper = require('../../../helpers/azure/cidr');
 
 module.exports = {
     title: 'Machine Learning Workspace Public Access Disabled',
@@ -38,12 +39,41 @@ module.exports = {
             for (let workspace of machineLearningWorkspaces.data) {
                 if (!workspace.id) continue; 
 
-                if (workspace.publicNetworkAccess && workspace.publicNetworkAccess.toLowerCase()=='disabled') {
+                if (workspace.publicNetworkAccess && workspace.publicNetworkAccess.toLowerCase() === 'disabled') {
                     helpers.addResult(results, 0,
                         'Machine Learning workspace has public network access disabled', location, workspace.id);
                 } else {
-                    helpers.addResult(results, 2,
-                        'Machine Learning workspace has public network access enabled', location, workspace.id);
+                    const hasPrivateEndpoint = workspace.privateEndpointConnections &&
+                                            workspace.privateEndpointConnections.length > 0 &&
+                                            workspace.privateEndpointConnections.some(conn =>
+                                                conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                            );
+
+                    const hasIpRules = workspace.networkAcls && workspace.networkAcls.ipRules &&
+                                       workspace.networkAcls.ipRules.length > 0;
+                    let hasOpenCidr = false;
+
+                    if (hasIpRules) {
+                        for (let rule of workspace.networkAcls.ipRules) {
+                            if (cidrHelper.isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
+                                hasOpenCidr = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    const restricted = workspace.networkAcls &&
+                        workspace.networkAcls.defaultAction &&
+                        workspace.networkAcls.defaultAction.toLowerCase() === 'deny' &&
+                        !hasOpenCidr;
+
+                    if (hasPrivateEndpoint || restricted) {
+                        helpers.addResult(results, 0,
+                            'Machine Learning workspace has public network access disabled', location, workspace.id);
+                    } else {
+                        helpers.addResult(results, 2,
+                            'Machine Learning workspace has public network access enabled', location, workspace.id);
+                    }
                 }
             }
 

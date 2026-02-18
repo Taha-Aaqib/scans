@@ -47,7 +47,12 @@ module.exports = {
                 }
 
                 if (Object.prototype.hasOwnProperty.call(describeAcct.data, 'publicNetworkAccess')) {
-                    if (describeAcct.data.publicNetworkAccess) {
+                    const hasActivePrivateEndpoint = describeAcct.data.privateEndpointConnections &&
+                                                    describeAcct.data.privateEndpointConnections.length > 0 &&
+                                                    describeAcct.data.privateEndpointConnections.some(conn => 
+                                                        conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                                    );
+                    if (describeAcct.data.publicNetworkAccess && !hasActivePrivateEndpoint) {
                         helpers.addResult(results, 2, 'Automation account does not have public network access disabled', location, account.id);
                     } else {
                         helpers.addResult(results, 0, 'Automation account has public network access disabled', location, account.id);

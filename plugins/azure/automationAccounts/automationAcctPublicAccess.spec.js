@@ -36,6 +36,26 @@ const account = [
         "type": "Microsoft.Automation/AutomationAccounts",
         "tags": {},
         "publicNetworkAccess": true,
+    },
+    {
+        "id": "/subscriptions/12345/resourceGroups/DefaultResourceGroup-WUS/providers/Microsoft.Automation/automationAccounts/Automate-12345-WUS",
+        "location": "westus",
+        "name": "Automate-12345-WUS",
+        "type": "Microsoft.Automation/AutomationAccounts",
+        "tags": {},
+        "publicNetworkAccess": true,
+        "privateEndpointConnections": [
+            {
+                "id": "/subscriptions/12345/resourceGroups/DefaultResourceGroup-WUS/providers/Microsoft.Automation/automationAccounts/Automate-12345-WUS/privateEndpointConnections/pe-conn-1",
+                "name": "pe-conn-1",
+                "properties": {
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved",
+                        "description": "Auto-approved"
+                    }
+                }
+            }
+        ]
     }
 ];
 
@@ -106,6 +126,17 @@ describe('automationAcctPublicAccess', function () {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);
                 expect(results[0].message).to.include('Automation account does not have public network access disabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if automation account has public network access enabled but with active private endpoint', function (done) {
+            const cache = createCache(automationAccounts, account[2]);
+            automationAcctPublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Automation account has public network access disabled');
                 expect(results[0].region).to.equal('eastus');
                 done();
             });

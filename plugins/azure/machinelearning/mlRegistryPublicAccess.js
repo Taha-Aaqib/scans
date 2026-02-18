@@ -38,7 +38,17 @@ module.exports = {
             for (let registry of machineLearningRegistries.data) {
                 if (!registry.id) continue; 
 
-                if (registry.publicNetworkAccess && registry.publicNetworkAccess.toLowerCase()=='disabled') {
+                const hasPrivateEndpoint = registry.privateEndpointConnections &&
+                                        registry.privateEndpointConnections.length > 0;
+
+                const hasSelectedNetworks = registry.networkRuleSet &&
+                                        registry.networkRuleSet.defaultAction &&
+                                        registry.networkRuleSet.defaultAction.toLowerCase() === 'deny';
+
+                if (registry.publicNetworkAccess && registry.publicNetworkAccess.toLowerCase() === 'disabled') {
+                    helpers.addResult(results, 0,
+                        'Machine Learning registry has public network access disabled', location, registry.id);
+                } else if (hasPrivateEndpoint || hasSelectedNetworks) {
                     helpers.addResult(results, 0,
                         'Machine Learning registry has public network access disabled', location, registry.id);
                 } else {

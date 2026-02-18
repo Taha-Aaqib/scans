@@ -18,7 +18,30 @@ const registry = [
         "type": "Microsoft.MachineLearningServices/registries",
         "publicNetworkAccess" : "Enabled"
       },
-     
+      {
+        "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/registries/test1",
+        "name": "test",
+        "type": "Microsoft.MachineLearningServices/registries",
+        "publicNetworkAccess": "Enabled",
+        "privateEndpointConnections": [
+            {
+                "properties": {
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved"
+                    }
+                }
+            }
+        ]
+      },
+      {
+        "id": "/subscriptions/12345667/resourceGroups/test/providers/Microsoft.MachineLearningServices/registries/test1",
+        "name": "test",
+        "type": "Microsoft.MachineLearningServices/registries",
+        "publicNetworkAccess": "Enabled",
+        "networkRuleSet": {
+            "defaultAction": "Deny"
+        }
+      }
 ];
 
 const createCache = (registries) => {
@@ -85,6 +108,28 @@ describe('mlRegistryPublicAccess', function() {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);
                 expect(results[0].message).to.include('Machine Learning registry has public network access enabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if Machine Learning registry has public access enabled but private endpoint is approved', function(done) {
+            const cache = createCache([registry[2]]);
+            mlRegistryPublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Machine Learning registry has public network access disabled');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if Machine Learning registry has public access enabled but selected networks are configured', function(done) {
+            const cache = createCache([registry[3]]);
+            mlRegistryPublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Machine Learning registry has public network access disabled');
                 expect(results[0].region).to.equal('eastus');
                 done();
             });

@@ -36,9 +36,14 @@ module.exports = {
 
             for (let batchAccount of batchAccounts.data) { 
                 if (!batchAccount.id) continue;
-        
-                if (batchAccount.publicNetworkAccess && 
-                    batchAccount.publicNetworkAccess.toLowerCase() === 'enabled') {
+                
+                const hasActivePrivateEndpoint = batchAccount.privateEndpointConnections &&
+                                                batchAccount.privateEndpointConnections.length > 0 &&
+                                                batchAccount.privateEndpointConnections.some(conn => 
+                                                    conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                                );
+                if ((batchAccount.publicNetworkAccess && 
+                    batchAccount.publicNetworkAccess.toLowerCase() === 'enabled') && !hasActivePrivateEndpoint) {
                     helpers.addResult(results, 2, 'Batch account is publicly accessible', location, batchAccount.id);
                 } else {
                     helpers.addResult(results, 0, 'Batch account is not publicly accessible', location, batchAccount.id);

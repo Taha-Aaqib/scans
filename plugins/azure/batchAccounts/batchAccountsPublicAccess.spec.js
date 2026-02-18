@@ -21,6 +21,27 @@ const batchAccounts = [
         "nodeManagementEndpoint": "123456789.eastus.service.batch.azure.com",
         "publicNetworkAccess": "Enabled"
     },
+    {
+        "id": "/subscriptions/1234566/resourceGroups/dummy/providers/Microsoft.Batch/batchAccounts/test-private",
+        "name": "test-private",
+        "type": "Microsoft.Batch/batchAccounts",
+        "location": "eastus",
+        "accountEndpoint": "test-private.eastus.batch.azure.com",
+        "nodeManagementEndpoint": "123456789.eastus.service.batch.azure.com",
+        "publicNetworkAccess": "Enabled",
+        "privateEndpointConnections": [
+            {
+                "id": "/subscriptions/1234566/resourceGroups/dummy/providers/Microsoft.Batch/batchAccounts/test-private/privateEndpointConnections/connection1",
+                "name": "connection1",
+                "type": "Microsoft.Batch/batchAccounts/privateEndpointConnections",
+                "properties": {
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved"
+                    }
+                }
+            }
+        ]
+    },
 ];
 
 const createCache = (batchAccounts) => {
@@ -87,6 +108,17 @@ describe('batchAccountsPublicAccess', function () {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);
                 expect(results[0].message).to.include('Batch account is publicly accessible');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if Batch account is publicly accessible but has active private endpoint', function (done) {
+            const cache = createCache([batchAccounts[2]]);
+            batchAccountsPublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Batch account is not publicly accessible');
                 expect(results[0].region).to.equal('eastus');
                 done();
             });

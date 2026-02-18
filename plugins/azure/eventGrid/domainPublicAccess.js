@@ -1,5 +1,6 @@
 const async = require('async');
 const helpers = require('../../../helpers/azure');
+const cidrHelper = require('../../../helpers/azure/cidr');
 
 module.exports = {
     title: 'Event Grid Domain Public Access',
@@ -38,10 +39,38 @@ module.exports = {
             for (let domain of domains.data) {
                 if (!domain.id) continue;
 
-                if (domain.publicNetworkAccess && domain.publicNetworkAccess.toLowerCase() === 'enabled') {
-                    helpers.addResult(results, 2, 'Event Grid domain has public network access enabled', location, domain.id);
-                } else {
+                if (domain.publicNetworkAccess && domain.publicNetworkAccess.toLowerCase() === 'disabled') {
                     helpers.addResult(results, 0, 'Event Grid domain does not have public network access enabled', location, domain.id);
+                } else {
+                    const hasPrivateEndpoint = domain.privateEndpointConnections &&
+                        domain.privateEndpointConnections.length > 0 &&
+                        domain.privateEndpointConnections.some(conn =>
+                            conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                        );
+
+                    if (hasPrivateEndpoint) {
+                        helpers.addResult(results, 0, 'Event Grid domain does not have public network access enabled', location, domain.id);
+                    } else {
+                        let hasOpenCidr = false;
+
+                        if (domain.inboundIpRules && domain.inboundIpRules.length) {
+                            for (let rule of domain.inboundIpRules) {
+                                if (cidrHelper.isOpenCidrRange(rule.ipMask)) {
+                                    hasOpenCidr = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        const restricted = domain.inboundIpRules &&
+                            domain.inboundIpRules.length > 0 && !hasOpenCidr;
+
+                        if (restricted) {
+                            helpers.addResult(results, 0, 'Event Grid domain does not have public network access enabled', location, domain.id);
+                        } else {
+                            helpers.addResult(results, 2, 'Event Grid domain has public network access enabled', location, domain.id);
+                        }
+                    }
                 }
             }
             rcb();

@@ -50,22 +50,12 @@ module.exports = {
                                             );
 
                     const hasIpRules = workspace.networkAcls && workspace.networkAcls.ipRules &&
-                                       workspace.networkAcls.ipRules.length > 0;
-                    let hasOpenCidr = false;
-
-                    if (hasIpRules) {
-                        for (let rule of workspace.networkAcls.ipRules) {
-                            if (cidrHelper.isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
-                                hasOpenCidr = true;
-                                break;
-                            }
-                        }
-                    }
+                                        workspace.networkAcls.ipRules.length > 0;
 
                     const restricted = workspace.networkAcls &&
                         workspace.networkAcls.defaultAction &&
                         workspace.networkAcls.defaultAction.toLowerCase() === 'deny' &&
-                        !hasOpenCidr;
+                        hasIpRules;
 
                     if (hasPrivateEndpoint || restricted) {
                         helpers.addResult(results, 0,

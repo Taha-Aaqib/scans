@@ -7,17 +7,40 @@ const accounts = [
         "name": "acc1",
         "type": "Microsoft.CognitiveServices/accounts",
         "location": "eastus",
-        "properties": {
-            "publicNetworkAccess": 'Disabled'
-        }
+        "publicNetworkAccess": 'Disabled'
       },
       {
         "id": "/subscriptions/12424/resourceGroups/bvttest/providers/Microsoft.CognitiveServices/accounts/acc2",
         "name": "acc2",
         "type": "Microsoft.CognitiveServices/accounts",
         "location": "eastus",
-        "properties": {
-            "publicNetworkAccess": 'Enabled'
+        "publicNetworkAccess": 'Enabled'
+      },
+      {
+        "id": "/subscriptions/12424/resourceGroups/bvttest/providers/Microsoft.CognitiveServices/accounts/acc3",
+        "name": "acc3",
+        "type": "Microsoft.CognitiveServices/accounts",
+        "location": "eastus",
+        "publicNetworkAccess": 'Enabled',
+        "privateEndpointConnections": [
+            {
+                "properties": {
+                    "privateLinkServiceConnectionState": {
+                        "status": "Approved"
+                    }
+                }
+            }
+        ]
+      },
+      {
+        "id": "/subscriptions/12424/resourceGroups/bvttest/providers/Microsoft.CognitiveServices/accounts/acc4",
+        "name": "acc4",
+        "type": "Microsoft.CognitiveServices/accounts",
+        "location": "eastus",
+        "publicNetworkAccess": 'Enabled',
+        "networkAcls": {
+            "defaultAction": "Deny",
+            "ipRules": [{"value": "192.168.1.0/24"}]
         }
       },
     
@@ -88,6 +111,28 @@ describe('accountPublicAccessDisabled', function() {
                 expect(results.length).to.equal(1);
                 expect(results[0].status).to.equal(2);
                 expect(results[0].message).to.include('OpenAI Account is publicly accessible');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if openai account has approved private endpoint', function(done) {
+            const cache = createCache([accounts[2]]);
+            accountPublicAccessDisabled.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('OpenAI Account is not publicly accessible');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if openai account has selected networks', function(done) {
+            const cache = createCache([accounts[3]]);
+            accountPublicAccessDisabled.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('OpenAI Account is not publicly accessible');
                 expect(results[0].region).to.equal('eastus');
                 done();
             });

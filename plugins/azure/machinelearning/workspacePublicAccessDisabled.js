@@ -1,6 +1,5 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure');
-const cidrHelper = require('../../../helpers/azure/cidr');
 
 module.exports = {
     title: 'Machine Learning Workspace Public Access Disabled',

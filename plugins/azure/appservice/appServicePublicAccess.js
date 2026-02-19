@@ -1,6 +1,6 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure');
-const cidrHelper = require('../../../helpers/azure/cidr');
+var cidrHelper = require('../../../helpers/azure/functions');
 
 module.exports = {
     title: 'App Service Public Network Access Disabled',

@@ -1,6 +1,6 @@
 const async = require('async');
 const helpers = require('../../../helpers/azure');
-const cidrHelper = require('../../../helpers/azure/cidr');
+var cidrHelper = require('../../../helpers/azure/functions');
 
 module.exports = {
     title: 'Event Grid Domain Public Access',

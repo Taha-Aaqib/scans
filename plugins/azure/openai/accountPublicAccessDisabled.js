@@ -37,14 +37,31 @@ module.exports = {
 
             for (let account of accounts.data) {
 
-                if (account.properties &&
-                    account.properties.publicNetworkAccess &&
-                    account.properties.publicNetworkAccess.toLowerCase() == 'enabled') {
-                    helpers.addResult(results, 2,
-                        'OpenAI Account is publicly accessible', location, account.id);
-                } else {
+                if (!account.id) continue;
+
+                const publicAccess = account.publicNetworkAccess && account.publicNetworkAccess.toLowerCase();
+
+                if (publicAccess === 'disabled') {
                     helpers.addResult(results, 0,
                         'OpenAI Account is not publicly accessible', location, account.id);
+                } else {
+                    const hasPrivateEndpoint = account.privateEndpointConnections &&
+                        account.privateEndpointConnections.length > 0 &&
+                        account.privateEndpointConnections.some(conn =>
+                            conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                        );
+
+                    const restricted = account.networkAcls &&
+                        account.networkAcls.defaultAction &&
+                        account.networkAcls.defaultAction.toLowerCase() === 'deny';
+
+                    if (hasPrivateEndpoint || restricted) {
+                        helpers.addResult(results, 0,
+                            'OpenAI Account is not publicly accessible', location, account.id);
+                    } else {
+                        helpers.addResult(results, 2,
+                            'OpenAI Account is publicly accessible', location, account.id);
+                    }
                 }
             }
 

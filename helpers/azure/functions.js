@@ -855,6 +855,16 @@ function checkNetworkExposure(cache, source, networkInterfaces, securityGroups, 
 
     return exposedPath;
 }
+
+function isOpenCidrRange(cidr) {
+    if (!cidr || typeof cidr !== 'string') return false;
+
+    const trimmed = cidr.trim();
+    return trimmed === '0.0.0.0/0' ||
+           trimmed === '::/0' ||
+           trimmed === '0.0.0.0';
+}
+
 module.exports = {
     addResult: addResult,
     findOpenPorts: findOpenPorts,
@@ -868,7 +878,7 @@ module.exports = {
     remediateOpenPortsHelper: remediateOpenPortsHelper,
     checkMicrosoftDefender: checkMicrosoftDefender,
     checkFlexibleServerConfigs:checkFlexibleServerConfigs,
-    checkNetworkExposure: checkNetworkExposure
-
+    checkNetworkExposure: checkNetworkExposure,
+    isOpenCidrRange: isOpenCidrRange
 };
 

@@ -627,7 +627,7 @@ var calls = {
     },
     serviceBus: {
         listNamespacesBySubscription: {
-            url: 'https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.ServiceBus/namespaces?api-version=2022-10-01-preview'
+            url: 'https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.ServiceBus/namespaces?api-version=2025-05-01-preview'
         }
     },
     mediaServices:{
@@ -1269,6 +1269,13 @@ var postcalls = {
             reliesOnPath: 'eventHub.listEventHub',
             properties: ['id'],
             url: 'https://management.azure.com/{id}/networkRuleSets/default?api-version=2022-10-01-preview'
+        }
+    },
+    serviceBus: {
+        getNamespaceNetworkRuleSet: {
+            reliesOnPath: 'serviceBus.listNamespacesBySubscription',
+            properties: ['id'],
+            url: 'https://management.azure.com/{id}/networkRuleSets/default?api-version=2021-11-01'
         }
     }
 };

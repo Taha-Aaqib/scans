@@ -22,16 +22,12 @@ const namespaces = [
         publicNetworkAccess: 'Disabled',
         disableLocalAuth: true,
         provisioningState: 'Succeeded',
-        status: 'Active',
-        encryption: {
-            keySource: 'Microsoft.KeyVault',
-            requireInfrastructureEncryption: false
-          },
+        status: 'Active'
     },
     {
         sku: { name: 'Basic', tier: 'Basic' },
         id: '/subscriptions/234/myrg/providers/Microsoft.ServiceBus/namespaces/test3',
-        name: 'test2',
+        name: 'test3',
         type: 'Microsoft.ServiceBus/Namespaces',
         location: 'East US',
         publicNetworkAccess: 'Enabled',
@@ -39,21 +35,81 @@ const namespaces = [
         provisioningState: 'Succeeded',
         status: 'Active'
     },
+    {
+        sku: { name: 'Premium', tier: 'Premium', capacity: 1 },
+        id: '/subscriptions/234/myrg/providers/Microsoft.ServiceBus/namespaces/test4',
+        name: 'test4',
+        type: 'Microsoft.ServiceBus/Namespaces',
+        location: 'East US',
+        publicNetworkAccess: 'Enabled',
+        disableLocalAuth: false,
+        provisioningState: 'Succeeded',
+        status: 'Active',
+        privateEndpointConnections: [
+            {
+                id: '/subscriptions/234/myrg/providers/Microsoft.ServiceBus/namespaces/test4/privateEndpointConnections/test-pec',
+                name: 'test-pec',
+                properties: {
+                    privateLinkServiceConnectionState: {
+                        status: 'Approved'
+                    }
+                }
+            }
+        ]
+    },
+    {
+        sku: { name: 'Premium', tier: 'Premium', capacity: 1 },
+        id: '/subscriptions/234/myrg/providers/Microsoft.ServiceBus/namespaces/test5',
+        name: 'test5',
+        type: 'Microsoft.ServiceBus/Namespaces',
+        location: 'East US',
+        publicNetworkAccess: 'Enabled',
+        disableLocalAuth: false,
+        provisioningState: 'Succeeded',
+        status: 'Active'
+    }
 ];
 
+const networkRules = {
+    restricted: {
+        data: {
+            ipRules: [{ ipMask: '10.0.0.1/32' }]
+        }
+    },
+    openCidr: {
+        data: {
+            ipRules: [{ ipMask: '0.0.0.0/0' }]
+        }
+    },
+    empty: {
+        data: {
+            ipRules: []
+        }
+    }
+};
 
-const createCache = (namespaces, err) => {
-
-    return {
+const createCache = (namespaces, err, networkRulesData = null) => {
+    const cache = {
         serviceBus: {
             listNamespacesBySubscription: {
                 'eastus': {
                     data: namespaces,
                     err: err
                 }
+            },
+            getNamespaceNetworkRuleSet: {
+                'eastus': {}
             }
         }
     };
+
+    if (namespaces && namespaces.length > 0) {
+        namespaces.forEach((ns) => {
+            cache.serviceBus.getNamespaceNetworkRuleSet['eastus'][ns.id] = networkRulesData || networkRules.empty;
+        });
+    }
+
+    return cache;
 };
 
 describe('namespacePublicAccess', function () {
@@ -81,18 +137,6 @@ describe('namespacePublicAccess', function () {
             });
         });
 
-    
-        it('should give passing result if namespace is not using premium tier', function (done) {
-            const cache = createCache([namespaces[2]], null);
-            namespacePublicAccess.run(cache, {}, (err, results) => {
-                expect(results.length).to.equal(1);
-                expect(results[0].status).to.equal(0);
-                expect(results[0].message).to.include('Service Bus Namespace is not a premium namespace');
-                expect(results[0].region).to.equal('eastus');
-                done();
-            });
-        });
-
         it('should give passing result if namespace is not publicly accessible', function (done) {
             const cache = createCache([namespaces[1]], null);
             namespacePublicAccess.run(cache, {}, (err, results) => {
@@ -104,7 +148,7 @@ describe('namespacePublicAccess', function () {
             });
         });
 
-        it('should give failing result if namespace is publicly accessible', function (done) {
+        it('should give failing result if namespace is publicly accessible without protection', function (done) {
             const cache = createCache([namespaces[0]], null);
             namespacePublicAccess.run(cache, {}, (err, results) => {
                 expect(results.length).to.equal(1);
@@ -114,5 +158,62 @@ describe('namespacePublicAccess', function () {
                 done();
             });
         });
+
+        it('should give failing result if basic tier namespace is publicly accessible', function (done) {
+            const cache = createCache([namespaces[2]], null);
+            namespacePublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(2);
+                expect(results[0].message).to.include('Service bus namespace is publicly accessible');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if premium namespace has approved private endpoints', function (done) {
+            const cache = createCache([namespaces[3]], null);
+            namespacePublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Service bus namespace is only accessible through private endpoints');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give passing result if namespace has public access enabled with restricted IP rules', function (done) {
+            const cache = createCache([namespaces[4]], null, networkRules.restricted);
+            namespacePublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(0);
+                expect(results[0].message).to.include('Service bus namespace is only accessible through private endpoints');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give failing result if namespace has public access enabled with open CIDR 0.0.0.0/0', function (done) {
+            const cache = createCache([namespaces[4]], null, networkRules.openCidr);
+            namespacePublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(2);
+                expect(results[0].message).to.include('Service bus namespace is publicly accessible');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
+
+        it('should give unknown result if unable to query network rules for namespace', function (done) {
+            const cache = createCache([namespaces[0]], null);
+            cache.serviceBus.getNamespaceNetworkRuleSet['eastus'][namespaces[0].id] = { err: 'error fetching network rules' };
+            namespacePublicAccess.run(cache, {}, (err, results) => {
+                expect(results.length).to.equal(1);
+                expect(results[0].status).to.equal(3);
+                expect(results[0].message).to.include('Unable to query network rules for namespace');
+                expect(results[0].region).to.equal('eastus');
+                done();
+            });
+        });
     });
 });
+

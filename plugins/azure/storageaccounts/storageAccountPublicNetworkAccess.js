@@ -58,8 +58,7 @@ module.exports = {
 
                     if ( restricted && !hasOpenCidr) {
                         helpers.addResult(results, 0, 'Storage account has public network access disabled', location, account.id);
-                    }
-                    else {
+                    } else {
                         helpers.addResult(results, 2, 'Storage account has public network access enabled for all networks', location, account.id);
                     }
                 } 

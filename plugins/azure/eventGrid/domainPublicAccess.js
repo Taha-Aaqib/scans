@@ -1,6 +1,5 @@
 const async = require('async');
 const helpers = require('../../../helpers/azure');
-var cidrHelper = require('../../../helpers/azure/functions');
 
 module.exports = {
     title: 'Event Grid Domain Public Access',
@@ -55,7 +54,7 @@ module.exports = {
 
                         if (domain.inboundIpRules && domain.inboundIpRules.length) {
                             for (let rule of domain.inboundIpRules) {
-                                if (cidrHelper.isOpenCidrRange(rule.ipMask)) {
+                                if (helpers.isOpenCidrRange(rule.ipMask)) {
                                     hasOpenCidr = true;
                                     break;
                                 }

@@ -270,7 +270,6 @@ module.exports = {
     },
     serviceBus:{
         listNamespacesBySubscription: 'id',
-        getNamespaceNetworkRuleSet: 'id'
     },
     flexibleServersConfigurations:{
         listByPostgresServer: 'id'

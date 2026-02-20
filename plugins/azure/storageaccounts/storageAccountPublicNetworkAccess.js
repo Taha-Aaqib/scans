@@ -1,6 +1,5 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure/');
-var cidrHelper = require('../../../helpers/azure/functions');
 
 module.exports = {
     title: 'Storage Account Public Network Access',
@@ -48,7 +47,7 @@ module.exports = {
                     if (hasIpRules) {
 
                         for (let rule of account.networkAcls.ipRules) {
-                            if (cidrHelper.isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
+                            if (helpers.isOpenCidrRange(rule.value || rule.ipAddressOrRange)) {
                                 hasOpenCidr = true;
                                 break;
                             }

@@ -1,6 +1,5 @@
 var async = require('async');
 var helpers = require('../../../helpers/azure');
-var cidrHelper = require('../../../helpers/azure/functions');
 
 module.exports = {
     title: 'App Service Public Network Access Disabled',
@@ -64,7 +63,7 @@ module.exports = {
                     
                     if (config.ipSecurityRestrictions && config.ipSecurityRestrictions.length) {
                         for (let rule of config.ipSecurityRestrictions) {
-                            if (cidrHelper.isOpenCidrRange(rule.ipAddress)) {
+                            if (helpers.isOpenCidrRange(rule.ipAddress)) {
                                 hasOpenCidr = true;
                                 break;
                             }

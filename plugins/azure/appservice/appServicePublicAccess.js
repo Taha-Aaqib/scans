@@ -57,8 +57,7 @@ module.exports = {
                         'App Service has public network access disabled',
                         location, webApp.id);
                     return;
-                }
-                else {
+                } else {
                     let hasOpenCidr = false;
                     
                     if (config.ipSecurityRestrictions && config.ipSecurityRestrictions.length) {

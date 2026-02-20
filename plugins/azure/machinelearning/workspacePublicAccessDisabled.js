@@ -45,7 +45,7 @@ module.exports = {
                     const hasPrivateEndpoint = workspace.privateEndpointConnections &&
                                             workspace.privateEndpointConnections.length > 0 &&
                                             workspace.privateEndpointConnections.some(conn =>
-                                                conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                                conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                                             );
 
                     const hasIpRules = workspace.networkAcls && workspace.networkAcls.ipRules &&

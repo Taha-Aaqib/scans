@@ -48,7 +48,7 @@ module.exports = {
                     const hasPrivateEndpoint = account.privateEndpointConnections &&
                         account.privateEndpointConnections.length > 0 &&
                         account.privateEndpointConnections.some(conn =>
-                            conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                            conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                         );
 
                     const restricted = account.networkAcls &&

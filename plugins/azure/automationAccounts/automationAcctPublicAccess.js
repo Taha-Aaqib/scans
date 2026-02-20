@@ -50,7 +50,7 @@ module.exports = {
                     const hasActivePrivateEndpoint = describeAcct.data.privateEndpointConnections &&
                                                     describeAcct.data.privateEndpointConnections.length > 0 &&
                                                     describeAcct.data.privateEndpointConnections.some(conn => 
-                                                        conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                                        conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                                                     );
                     if (describeAcct.data.publicNetworkAccess && !hasActivePrivateEndpoint) {
                         helpers.addResult(results, 2, 'Automation account does not have public network access disabled', location, account.id);

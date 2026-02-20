@@ -40,7 +40,7 @@ module.exports = {
                 const hasActivePrivateEndpoint = batchAccount.privateEndpointConnections &&
                                                 batchAccount.privateEndpointConnections.length > 0 &&
                                                 batchAccount.privateEndpointConnections.some(conn => 
-                                                    conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                                                    conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                                                 );
                 if ((batchAccount.publicNetworkAccess && 
                     batchAccount.publicNetworkAccess.toLowerCase() === 'enabled') && !hasActivePrivateEndpoint) {

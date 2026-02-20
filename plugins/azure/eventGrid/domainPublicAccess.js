@@ -44,7 +44,7 @@ module.exports = {
                     const hasPrivateEndpoint = domain.privateEndpointConnections &&
                         domain.privateEndpointConnections.length > 0 &&
                         domain.privateEndpointConnections.some(conn =>
-                            conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                            conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                         );
 
                     if (hasPrivateEndpoint) {

@@ -51,7 +51,7 @@ module.exports = {
                     if (namespace.sku && namespace.sku.tier && namespace.sku.tier.toLowerCase() === 'premium' &&
                         namespace.privateEndpointConnections && namespace.privateEndpointConnections.length > 0 &&
                         namespace.privateEndpointConnections.some(conn =>
-                            conn.properties?.privateLinkServiceConnectionState?.status === 'Approved'
+                            conn.properties && conn.properties.privateLinkServiceConnectionState && conn.properties.privateLinkServiceConnectionState.status === 'Approved'
                         )) {
                         helpers.addResult(results, 0, 'Service bus namespace is only accessible through private endpoints', location, namespace.id);
                     } else {

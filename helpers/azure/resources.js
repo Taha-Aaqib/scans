@@ -269,7 +269,7 @@ module.exports = {
         list: 'id'
     },
     serviceBus:{
-        listNamespacesBySubscription: 'id',
+        listNamespacesBySubscription: 'id'
     },
     flexibleServersConfigurations:{
         listByPostgresServer: 'id'
